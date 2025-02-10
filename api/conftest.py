@@ -7,7 +7,7 @@ from rest_framework.test import APIClient
 from tasks.handlers import handler
 from django.contrib.auth.models import User
 
-from lib.build.lib.app_lib.services.notification_service import NotificationService
+from lib.app_lib.services.notification_service import NotificationService
 from tasks.models import File
 
 if TYPE_CHECKING:

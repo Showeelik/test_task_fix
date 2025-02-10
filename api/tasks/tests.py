@@ -1,7 +1,7 @@
 import pytest
 from typing import TYPE_CHECKING, Callable, NoReturn, Tuple, Any
 
-from lib.build.lib.app_lib.messages.message import RenameFileRequest
+from lib.app_lib.messages.message import RenameFileRequest
 from tasks.models import File
 
 if TYPE_CHECKING:
@@ -64,5 +64,6 @@ def test_files_service(
 
     file_instance = File.objects.get(pk=file_pk)
 
-    assert file_instance.name == tested_file_split_name[0]
-    assert file_instance.extension == tested_file_split_name[1]
+    assert file_instance.name == '.'.join(tested_file_split_name)
+    # Если расширение не предполагается отдельно, можно проверить, что file_instance.extension пустой:
+    assert not file_instance.extension

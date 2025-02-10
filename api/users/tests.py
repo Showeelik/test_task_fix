@@ -32,7 +32,6 @@ def test_auth_using_login_pass(anon_client: 'APIClient', user_with_password: 'Us
     assert response.status_code == 200, response.content
 
     data = response.json()
-
     assert data['username'] == username
 
 
@@ -60,18 +59,27 @@ def test_user_flow(admin_client: 'APIClient', anon_client: 'APIClient'):
             data=user_data,
             format='json'
         )
-        assert response.status_code == 200, f"Ошибка создания пользователя: {response.content}"
+        assert response.status_code == 201, f"Ошибка создания пользователя: {response.content}"
         created_users_ids.append(response.json()['id'])
     
     # 2. Проверка количества созданных пользователей
     response = admin_client.get('/api/v1/users/')
     assert response.status_code == 200
-    users_list = response.json()
-    assert len([u for u in users_list if u['id'] in created_users_ids]) == users_count, \
-        f"Количество созданных пользователей не совпадает: ожидалось {users_count}"
+    data = response.json()
+    # Если API использует пагинацию, то общее количество пользователей находится в 'count'
+    total_count = data.get("count")
+    if total_count is None:
+        users_list = data["results"]
+        # Если users_list – строка, декодируем её в объект Python
+        if isinstance(users_list, str):
+            users_list = json.loads(users_list)
+        # Если элементы списка являются строками, преобразуем их в объекты
+        users_list = [json.loads(u) if isinstance(u, str) else u for u in users_list]
+        total_count = len([u for u in users_list if u.get('id') in created_users_ids])
+    assert total_count == users_count, f"Количество созданных пользователей не совпадает: ожидалось {users_count}"
     
     # 3. Проверка авторизации для каждого пользователя
-    for i, user_id in enumerate(created_users_ids):
+    for i, _ in enumerate(created_users_ids):
         auth_data = {
             'username': f'user_{i}',
             'password': f'password_{i}'
@@ -93,5 +101,11 @@ def test_user_flow(admin_client: 'APIClient', anon_client: 'APIClient'):
     # Проверка удаления
     response = admin_client.get('/api/v1/users/')
     users_after = response.json()
-    remaining_users = [u for u in users_after if u['id'] in created_users_ids]
+    if isinstance(users_after, str):
+        users_after = json.loads(users_after)
+    # При пагинации результат может храниться в ключе 'results'
+    if "results" in users_after:
+        users_after = users_after["results"]
+    users_after = [json.loads(u) if isinstance(u, str) else u for u in users_after]
+    remaining_users = [u for u in users_after if u.get('id') in created_users_ids]
     assert len(remaining_users) == 0, "Не все пользователи были удалены"

@@ -17,6 +17,11 @@ class TasksConfig(AppConfig):
 
     @property
     def connection(self) -> 'SyncConnection':
+        """ Creates connection if not exists
+
+        Returns:
+            SyncConnection: connection
+        """
         if not self._connection:
             connection_class = getattr(app_lib, settings.APP_SERVICE_CONNECTION)
             connection = connection_class(settings.APP_SERVICE_URL)
@@ -26,6 +31,11 @@ class TasksConfig(AppConfig):
 
     @property
     def service(self) -> 'Service':
+        """ Creates service if not exists
+
+        Returns:
+            Service: service
+        """
         if not self._service:
             service = Service(**controller_config)
             service.setup(self.connection)
@@ -34,6 +44,11 @@ class TasksConfig(AppConfig):
 
     @property
     def notifications(self) -> 'NotificationService':
+        """ Creates notification service if not exists
+
+        Returns:
+            NotificationService: notification service
+        """
         if not self._notifications:
             notifications = NotificationService()
             notifications.setup(self.connection, create_queue=False)

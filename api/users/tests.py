@@ -19,6 +19,12 @@ def user_with_password(user: 'User'):
 
 @pytest.mark.django_db
 def test_auth_using_login_pass(anon_client: 'APIClient', user_with_password: 'User'):
+    """Тестирование аутентификации с помощью логина и пароля
+
+    Args:
+        anon_client (APIClient): _description_
+        user_with_password (User): _description_
+    """
     username = user_with_password.username
     response = anon_client.post(
         '/api/auth/login/',
@@ -38,7 +44,7 @@ def test_auth_using_login_pass(anon_client: 'APIClient', user_with_password: 'Us
 @pytest.mark.django_db
 def test_user_flow(admin_client: 'APIClient', anon_client: 'APIClient'):
     """Тестирование полного цикла работы с пользователями"""
-    
+
     # Подготовка тестовых данных
     users_count = 20
     users_data = [
@@ -49,24 +55,23 @@ def test_user_flow(admin_client: 'APIClient', anon_client: 'APIClient'):
         }
         for i in range(users_count)
     ]
-    
+
     created_users_ids = []
-    
+
     # 1. Создание пользователей
     for user_data in users_data:
-        response = admin_client.post(
-            '/api/v1/users/',
-            data=user_data,
-            format='json'
-        )
-        assert response.status_code == 201, f"Ошибка создания пользователя: {response.content}"
+        response = admin_client.post('/api/v1/users/', data=user_data, format='json')
+        assert (
+            response.status_code == 201
+        ), f"Ошибка создания пользователя: {response.content}"
         created_users_ids.append(response.json()['id'])
-    
+
     # 2. Проверка количества созданных пользователей
     response = admin_client.get('/api/v1/users/')
     assert response.status_code == 200
     data = response.json()
-    # Если API использует пагинацию, то общее количество пользователей находится в 'count'
+    # Если API использует пагинацию,
+    # то общее количество пользователей находится в 'count'
     total_count = data.get("count")
     if total_count is None:
         users_list = data["results"]
@@ -76,28 +81,26 @@ def test_user_flow(admin_client: 'APIClient', anon_client: 'APIClient'):
         # Если элементы списка являются строками, преобразуем их в объекты
         users_list = [json.loads(u) if isinstance(u, str) else u for u in users_list]
         total_count = len([u for u in users_list if u.get('id') in created_users_ids])
-    assert total_count == users_count, f"Количество созданных пользователей не совпадает: ожидалось {users_count}"
-    
+    assert (
+        total_count == users_count
+    ), f"Количество созданных пользователей не совпадает: ожидалось {users_count}"
+
     # 3. Проверка авторизации для каждого пользователя
     for i, _ in enumerate(created_users_ids):
-        auth_data = {
-            'username': f'user_{i}',
-            'password': f'password_{i}'
-        }
-        response = anon_client.post(
-            '/api/auth/login/',
-            data=auth_data,
-            format='json'
-        )
-        assert response.status_code == 200, \
-            f"Ошибка авторизации пользователя {auth_data['username']}: {response.content}"
-    
+        auth_data = {'username': f'user_{i}', 'password': f'password_{i}'}
+        username = auth_data['username']
+        response = anon_client.post('/api/auth/login/', data=auth_data, format='json')
+        assert (
+            response.status_code == 200
+        ), f"Ошибка авторизации пользователя {username}: {response.content}"
+
     # 4. Удаление созданных пользователей
     for user_id in created_users_ids:
         response = admin_client.delete(f'/api/v1/users/{user_id}/')
-        assert response.status_code == 204, \
-            f"Ошибка удаления пользователя {user_id}: {response.content}"
-    
+        assert (
+            response.status_code == 204
+        ), f"Ошибка удаления пользователя {user_id}: {response.content}"
+
     # Проверка удаления
     response = admin_client.get('/api/v1/users/')
     users_after = response.json()

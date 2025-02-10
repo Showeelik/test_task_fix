@@ -1,9 +1,5 @@
 from django.contrib.auth.models import User
-from rest_framework.serializers import (
-    CharField,
-    ModelSerializer,
-    Serializer,
-)
+from rest_framework.serializers import CharField, ModelSerializer, Serializer
 
 from users.permissions import IsOwnerOrReadOnly
 
@@ -17,14 +13,7 @@ class MeSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = (
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'email',
-            'is_staff'
-        )
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'is_staff')
 
 
 class UserSerializer(ModelSerializer):
@@ -33,17 +22,8 @@ class UserSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = (
-            'id',
-            'username',
-            'password',
-            'first_name',
-            'last_name',
-            'email'
-        )
-        read_only_fields = (
-            'id',
-        )
+        fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email')
+        read_only_fields = ('id',)
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data: dict) -> 'User':

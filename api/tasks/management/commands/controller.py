@@ -12,10 +12,15 @@ from tasks.handlers import handler
 
 
 logger = get_logger('tasks.controller')
-Request = Union['ControlRequest']
+Request = Union[Service, NotificationService]
 
 
 class Command(BaseCommand):
+    """
+
+    Args:
+        BaseCommand (BaseCommand): _base_command
+    """
     def handle(self, *args, **options):
         controller = Service(**controller_config)
         notifications = NotificationService()
@@ -27,4 +32,3 @@ class Command(BaseCommand):
             handler(request, controller, notifications, message_ack)
 
         controller.consume(consume)
-

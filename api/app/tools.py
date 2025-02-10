@@ -21,12 +21,12 @@ def get_all_logged_in_users():
     return User.objects.filter(id__in=uid_list)
 
 
-def send_to_all(data: dict, notifications: 'NotificationService', notification_type: 'NotificationType'):
+def send_to_all(
+    data: dict,
+    notifications: 'NotificationService',
+    notification_type: 'NotificationType',
+):
     users = get_all_logged_in_users()
     for user in users:
-        message = Notification(
-            user_id=user.pk,
-            payload=data,
-            type=notification_type
-        )
+        message = Notification(user_id=user.pk, payload=data, type=notification_type)
         notifications.send(message)
